@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python 进阶之路 (一) List 进阶方法汇总</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__left">
+    <div class="stackedit__toc">
+      
+<ul>
+<li>
+<ul>
+<li><a href="#开启变身模式">开启变身模式</a></li>
+<li><a href="#list的进阶用法">List的进阶用法</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+  <div class="stackedit__right">
+    <div class="stackedit__html">
+      <h2 id="开启变身模式">开启变身模式</h2>
+<p>大家好, 从这一期开始，我们会从小白变身为中等小白，在基础起步阶段有太多的东西我没有讲到，但是俗话说的好，无他，但手熟尔，只要多多练习，时间会是最好的证明，相信我们终有一天会成为高手，因此从这一系列开始，让我们一起更上一层楼，还是和往常一样，我也是水平不高，如果有大神发现文章中的错误一定要指出哈~</p>
+<p>先皮一下，看个欧阳修的&lt;&lt;卖油翁&gt;&gt;：</p>
+<blockquote>
+<p>陈康肃公尧咨善射，当世无双，公亦以此自矜。尝射于家圃，有卖油翁释担而立，睨之，久而不去。见其发矢十中八九，但微颔之。</p>
+</blockquote>
+<blockquote>
+<p>康肃问曰：“汝亦知射乎？吾射不亦精乎？”翁曰：“无他，但手熟尔。”康肃忿然曰：“尔安敢轻吾射！”翁曰：“以我酌油知之。”乃取一葫芦置于地，以钱覆其口，徐以杓酌油沥之，自钱孔入，而钱不湿。因曰：<strong>“我亦无他，惟手熟尔。</strong>”康肃笑而遣之。</p>
+</blockquote>
+<h2 id="list的进阶用法">List的进阶用法</h2>
+<p>这里我将会详细介绍一些我认为非常不错的List的使用方法，至于list 自带的一些基础用法，这里不再说明，感兴趣的朋友们可以看看我的基础教程: <a href="https://segmentfault.com/a/1190000018002749">Python 基础起步 (五) 一定要知道的数据类型：初识List</a> 和 <a href="https://segmentfault.com/a/1190000018016421">Python 基础起步 (六) List的实用技巧大全</a>, 好啦，闲话少说，让我们开始吧</p>
+<h3 id="把其他类型数据结构转化为list类型"><strong>把其他类型数据结构转化为List类型</strong></h3>
+<p>利用**list(target)**即可实现把其他类型的数据结构转化为List类型，十分实用，我们可以把字符串，元组等数据结构转化为List,也可以直接创建,像下图一样：</p>
+<pre><code>
+print(list())                            # 创建空List
+
+vowelString = 'aeiou'                    # 把字符串转化为List
+print(list(vowelString))
+
+vowelTuple = ('a', 'e', 'i', 'o', 'u')  # 从元组tuple转化为List
+print(list(vowelTuple))
+
+vowelList = ['a', 'e', 'i', 'o', 'u']   # 从List到List
+print(list(vowelList))
+
+vowelSet = {'a', 'e', 'i', 'o', 'u'}    #  从Set到List
+print(list(vowelSet))
+
+Out: []
+     ['a', 'e', 'i', 'o', 'u']
+     ['a', 'e', 'i', 'o', 'u']
+     ['a', 'e', 'i', 'o', 'u']
+     ['a', 'e', 'i', 'o', 'u']
+
+</code></pre>
+<p>可能平时用的比较多的一般是从一个dict中提取 keys 和 values ：</p>
+<pre><code>person = {
+    'name':'Peppa Pig',
+    'age':15,
+    'country':'bratian'}
+
+person_keys = list(person.keys())
+person_values = list(person.values())
+
+print(list(person))  # 如果直接转化一个字典只会把keys提取出来
+print(list(person.keys()))
+print(list(person.values()))
+
+Out:['name', 'age', 'country']    
+    ['name', 'age', 'country']             # 把字典中的Keys提出
+    ['Peppa Pig', 15, 'bratian']           # 把字典中的Values提出
+ 
+</code></pre>
+<p>这里大家稍微注意下，如果直接用list(person)会默认等同于person.keys()</p>
+<h3 id="list排序方法汇总"><strong>List排序方法汇总</strong></h3>
+<p>总体来说，有两种方法最为便捷，**List.sort **或者 <strong>sorted(List)</strong>,具体来看如何实现，先看升序：</p>
+<pre><code>vowels = ['e', 'a', 'u', 'o', 'i']   
+vowels.sort()        
+print('Sorted list Acending:', vowels)  # 使用sort
+Out: Sorted list Acending: ['a', 'e', 'i', 'o', 'u']
+</code></pre>
+<pre><code>vowels = ['e', 'a', 'u', 'o', 'i']   
+print('Sorted list Acending:', sorted(vowels))  # 使用sorted
+Out：Sorted list Acending: ['a', 'e', 'i', 'o', 'u']
+
+</code></pre>
+<p>再来看降序：</p>
+<pre><code>vowels = ['e', 'a', 'u', 'o', 'i']
+vowels.sort(reverse=True)     # 使用sort
+print('Sorted list (in Descending):', vowels)
+Out: Sorted list (in Descending): ['u', 'o', 'i', 'e', 'a']
+
+</code></pre>
+<pre><code>vowels = ['e', 'a', 'u', 'o', 'i']
+print('Sorted list (in Descending):', sorted(vowels,reverse=True))  # 使用sorted方法
+Out:Sorted list (in Descending): ['u', 'o', 'i', 'e', 'a']
+</code></pre>
+<p>其实这里里面还有一个关键的参数是key，我们可以自定义一些规则排序，下面看个例子，用的是默认的len函数<br>
+，让我们根据List中每个元素的长度来排序，首先是升序：</p>
+<pre><code>vowels = ['I', 'live', 'at', 'Paris', 'I','love','Python']
+# 使用sort
+vowels.sort(key=len)  
+print('Sorted by lenth Ascending:', vowels)
+Out:Sorted by lenth: ['I', 'I', 'at', 'live', 'love', 'Paris', 'Python']
+
+</code></pre>
+<pre><code>vowels = ['I', 'live', 'at', 'Paris', 'I','love','Python']
+# 使用 sorted
+print('Sorted by lenth Ascending:', sorted(vowels,key=len))
+Out：Sorted by lenth Ascending: ['I', 'I', 'at', 'live', 'love', 'Paris', 'Python']
+
+</code></pre>
+<p>降序也差不多啦：</p>
+<pre><code>vowels = ['I', 'live', 'at', 'Paris', 'I','love','Python']
+vowels.sort(key=len,reverse=True)
+print('Sorted by lenth Descending:', vowels)
+Out：Sorted by lenth Descending: ['Python', 'Paris', 'live', 'love', 'at', 'I', 'I']
+
+
+</code></pre>
+<pre><code>vowels = ['I', 'live', 'at', 'Paris', 'I','love','Python']
+print('Sorted by lenth Descending:', sorted(vowels,reverse=True))
+Out：Sorted by lenth Descending: ['Python', 'Paris', 'live', 'love', 'at', 'I', 'I']
+
+</code></pre>
+<p>有关这个key我们可以自己定义，请看下面的大栗子：</p>
+<pre><code>def takeSecond(elem):
+    return elem[1]
+
+random = [(2, 2), (3, 4), (4, 1), (1, 3)]
+random.sort(key=takeSecond) # sort list with key
+print('Sorted list:', random)
+
+Out： [(4, 1), (2, 2), (1, 3), (3, 4)]
+</code></pre>
+<p>这里因为列表中的元素都是元组，所以我们规定按照元组的第二个数排序，所以结果如上，默认依然是reverse=False ，也就是升序，至于其他有意思的方法大家可以自己开发</p>
+<h3 id="逆序输出list"><strong>逆序输出List</strong></h3>
+<p>如果我们想要逆序输出一个List，简单来说有两种方法比较好用，切片和reverse，来看例子：</p>
+<pre><code>    vowels = ['I', 'live', 'at', 'Paris', 'I','love','Python']
+    print(list(reversed(vowels)))
+    print(list[::-1])
+Out:['Python', 'love', 'I', 'Paris', 'at', 'live', 'I']   
+    ['Python', 'love', 'I', 'Paris', 'at', 'live', 'I']   
+</code></pre>
+<h3 id="利用range生成list"><strong>利用Range生成List</strong></h3>
+<p>Python里面为我们提供了一个超好用的方法range()，具体的用法很多，不在这里一一讲解啦，但是大家可以看一下它如何和List结合在一起的：</p>
+<pre><code>five_numbers=list(range(5))  #创建0~4的List
+print(five_numbers)
+
+odd_numbers=list(range(1,50,2))   #创建0~50所有的奇数的List
+print(odd_numbers)
+
+even_numbers=list(range(0,50,2))  #创建0~50所有的偶数的List
+print(even_numbers)
+</code></pre>
+<p>其实很简单，用的最多的就是range(start, stop, hop)这个结构，其他的大家可以自行查询哈</p>
+<h3 id="list列表推导式"><strong>List列表推导式</strong></h3>
+<p>其实这个东西无非就是为了减少代码书写量，比较Pythonic的东西，基础模板如下：</p>
+<pre><code>variable = [out_exp for out_exp in input_list if out_exp == 2]
+</code></pre>
+<p>大家直接看比较麻烦，还是直接上代码吧：</p>
+<pre><code>S = [x**2 for x in range(8)]      # 0~7每个数的平方存为List
+V = [2**i for i in range(8)]      # 2的 0~7次方
+M = [x for x in S if x % 2 == 0]  #找出在S里面的偶数
+
+print(S)
+print(V)
+print(M)
+
+
+Out:   Square of 0 ~7:  [0, 1, 4, 9, 16, 25, 36, 49]
+       The x power of 2,(0&lt;x&lt;7) :  [1, 2, 4, 8, 16, 32, 64, 128]
+       The even numbers in S:  [0, 4, 16, 36]
+
+</code></pre>
+<p>通过这个小栗子大家估计已经明白用法啦，推导式还可以这么用：</p>
+<pre><code>verbs=['work','eat','sleep','sit']
+verbs_with_ing=[v+'ing' for v in verbs]   # 使一组动词成为现在分词
+print(verbs_with_ing)
+
+Out：['working', 'eating', 'sleeping', 'siting']
+
+</code></pre>
+<p>或者加上查询条件if ：</p>
+<pre><code>all_numbers=list(range(-7,9))
+numbers_positive = [n for n in all_numbers if n&gt;0 ]
+numbers_negative = [n for n in all_numbers if n&lt;0]
+devided_by_two = [n for n in all_numbers if n%2==0]
+
+print("The positive numbers between -7 to 9 are :",numbers_positive)
+print("The negative numbers between -7 to 9 are :",numbers_negative )
+print("The numbers deveided by 2 without reminder are :",devided_by_two)```
+
+Out：The positive numbers between -7 to 9 are : [1, 2, 3, 4, 5, 6, 7, 8]
+     The negative numbers between -7 to 9 are : [-7, -6, -5, -4, -3, -2, -1]
+     The numbers deveided by 2 without reminder are : [-6, -4, -2, 0, 2, 4, 6, 8]
+
+</code></pre>
+<h2 id="总结">总结</h2>
+<p>其实客观来讲，list在实际项目中所用的地方有限，特别是处理数据量较大的情况下，因为速度极慢，但是在一些边边角角的地方我个人用的还挺多，尤其是不求速度的地方，总的来讲List是我个人比较喜欢的Python<br>
+数据结构，简单好用！！！！！</p>
+<p>好啦，我要去吃大餐啦，祝大家新年快乐呀！！！</p>
+
+    </div>
+  </div>
+</body>
+
+</html>

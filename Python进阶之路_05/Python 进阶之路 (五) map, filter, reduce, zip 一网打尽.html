@@ -1,0 +1,319 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python 进阶之路 (五) map, filter, reduce, zip 一网打尽</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__left">
+    <div class="stackedit__toc">
+      
+<ul>
+<li>
+<ul>
+<li><a href="#简洁的内置函数">简洁的内置函数</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+  <div class="stackedit__right">
+    <div class="stackedit__html">
+      <h2 id="简洁的内置函数">简洁的内置函数</h2>
+<p>大家好，我又回来了，今天我想和大家分享的是Python非常重要的几个内置函数：map，filter，reduce, zip。<br>
+它们都是处理序列的便捷函数。这很大程度上归功于函数式编程的世界。我们可以利用它们把一些小函数应用于一个序列的所有元素。从而节省编写显式循环的时间。</p>
+<p>另外，这些中的每一个都是纯函数，有返回值。因此我们可以容易地将函数的返回结果用表达式来表示。</p>
+<p>好了，又到了大白话时间，为什么用它们，就是可以简化我们的代码，更简洁高效的执行一些需要用到循环迭代为主的任务，接下来让我们一个个来看</p>
+<h3 id="map">map()</h3>
+<blockquote>
+<p>函数构造</p>
+</blockquote>
+<p>map()函数的主要作用是可以把一个方法依次执行在一个可迭代的序列上，比如List等，具体的信息如下：</p>
+<ul>
+<li>基础语法：map(fun, iterable)</li>
+<li>参数：fun是map传递给定可迭代序列的每个元素的函数。iterable是一个可以迭代的序列，序列中的每一个元素都可以执行fun</li>
+<li>返回值：map object</li>
+</ul>
+<p>好了，大白话就是利用map我们可以把一个函数fun 执行到序列iter的每一个元素上，用例子非常好理解~</p>
+<blockquote>
+<p>基础用法：</p>
+</blockquote>
+<p>下面先让我们看一个小例子，假设现在我们有一个List,包含1~5五个数字，我们想要让每一个数+1，如果不知道map这个函数之前，我们的解决方案是这样的：</p>
+<pre><code>numbers = [1, 2, 3, 4, 5]
+for i in range(0,len(numbers)):      #对每个元素加1
+    numbers[i]+=1 
+print(numbers)
+Out:[2, 3, 4, 5, 6]
+</code></pre>
+<p>或者是这样的：</p>
+<pre><code>numbers = [1, 2, 3, 4, 5]
+result = []
+for n in numbers:
+    result.append(n+1)
+print(result)
+Out:[2, 3, 4, 5, 6]
+</code></pre>
+<p>但是显然，无论怎么做都会涉及到写循环，这里就是map函数的用武之地了，我们可以用map函数这样实现：</p>
+<pre><code>def add_one(n):
+    return n + 1
+
+numbers = [1, 2, 3, 4, 5]
+result = map(add_one, numbers)
+print(result)
+print(type(result))
+print(list(result))
+
+Out:&lt;map object at 0x00000260F508BE80&gt;
+    &lt;class 'map'&gt;
+    [2, 3, 4, 5, 6]
+</code></pre>
+<p>这里想必聪明的你发现了map的好处，在优化精简代码的同时，某种程度上讲实现了方法和循环部分的分离，这里我们可以发现map返回就是map类，我们这里传递的序列是List，最后输出时经过类型转换也是list</p>
+<p>在传递序列时只要这个序列是可迭代的就好，不一定非要List，比如我们换一种：</p>
+<pre><code>def add_one(n):
+    return n + 1
+    
+numbers = (1, 2, 3, 4, 5)     #序列为元组
+result = map(add_one, numbers)
+print(tuple(result))          #
+
+Out：(2, 3, 4, 5, 6)
+</code></pre>
+<p>输入的序列为同样可以迭代的元组，输出时我们也选择元组，效果一样的。</p>
+<blockquote>
+<p>更进一步</p>
+</blockquote>
+<p>还用刚才的例子，为了更加简洁，我们可以用lambda函数配合map使用，具体实现如下：</p>
+<pre><code>numbers = (1, 2, 3, 4, 5)                     # 迭代对象为tuple
+result = map(lambda x: x + 1, numbers)
+print(list(result))                           # 输出对象为list
+ 
+Out：[2, 3, 4, 5, 6]
+
+</code></pre>
+<p>更加简洁优雅了对吧！！这个lambad函数我之后会说，今天它不是主角哈哈，先一带而过。<br>
+让我们重新把目光转移到map上来，除了刚才的用法，还要一种情况也十分常见，让我们看下面的例子：</p>
+<pre><code># List of strings
+words = ['paris', 'xiaobai','love']
+
+# 把数组中每个元素变为List
+test = list(map(list, words))
+print(test)
+
+Out: [['p', 'a', 'r', 'i', 's'], ['x', 'i', 'a', 'o', 'b', 'a', 'i'], ['l', 'o', 'v', 'e']]
+
+</code></pre>
+<p>words是一个只包含字符串类型元素的list，我们用map可以实现将words的每一个元素全部转化为list类型，这里有一点一定要注意，能实现的前提一定是每个元素都是可以迭代的类型，如果出现了如int类型的元素，就会出错啦：</p>
+<pre><code># List of strings
+words = [18,'paris', 'xiaobai','love']
+
+# 把数组中每个元素变为List
+test = list(map(list, words))
+print(test)
+
+Out：TypeError: 'int' object is not iterable
+
+</code></pre>
+<p>大家一看错误类型相比立刻就明白啦，所以正确的使用方法一定是类似这种:</p>
+<pre><code>nums = [3,"23",-2]
+print(list(map(float,nums)))
+
+Out: [3.0, 23.0, -2.0]
+
+</code></pre>
+<p>总之就是类型要注意，今天我就抛砖引玉简单介绍一下map，具体的用法大家可以自行开发哈，我也在不断学习中</p>
+<h3 id="filter">filter()</h3>
+<blockquote>
+<p>函数构造</p>
+</blockquote>
+<p>filter（）方法借助于一个函数来过滤给定的序列，该函数测试序列中的每个元素是否为真。</p>
+<ul>
+<li>基础语法：filter(fun, iterable)</li>
+<li>参数：fun测试iterable序列中的每个元素执行结果是否为True，iterable为被过滤的可迭代序列</li>
+<li>返回值：可迭代的序列，包含元素对于fun的执行结果都为True</li>
+</ul>
+<p>简而言之就是filter可以帮助我们根据给出的条件过滤一组数据并返回结果</p>
+<blockquote>
+<p>基础用法：</p>
+</blockquote>
+<p>让我们先看一个例子：</p>
+<pre><code># 过滤元音的方法
+def fun(variable):
+    letters = ['a', 'e', 'i', 'o', 'u']
+    if (variable in letters):
+        return True
+    else:
+        return False
+
+# 给定序列
+sequence = ['I', 'l', 'o', 'v', 'e', 'p', 'y','t','h','o','n']
+
+# 根据条件得出结果
+filtered = list(filter(fun, sequence))
+print(filtered)
+
+Out：['o', 'e', 'o']
+</code></pre>
+<p>这里我们创建一个可以提取元音字母的方法fun，给定的可迭代序列为list，之后就可以用filter方法很容易的提取出结果啦，再看一个类似例子：</p>
+<pre><code># 判断为正数
+def positive(num):
+    if num&gt;0:
+        return True
+    else:
+        return False
+
+#判断偶数
+def even(num):
+    if num % 2==0:
+        return True
+    else:
+        return False
+
+numbers=[1,-3,5,-20,0,9,12]
+
+positive_nums = list(filter(positive, numbers))
+print(positive_nums)  # 输出正数 list
+
+
+even_nums = tuple(filter(even,numbers))
+print(even_nums)     #输出偶数 tuple
+
+Out：[1, 5, 9, 12]
+     (-20, 0, 12)
+</code></pre>
+<p>看到这里相比大家已经知道filter的基础用法啦， 要先有一个,能返回True或者False的方法，或者表达式作为过滤条件就行啦</p>
+<blockquote>
+<p>更进一步</p>
+</blockquote>
+<p>这里其实和map一样了，基本上最简洁的用法都是和lambda混在一起，比如下面我们想要把刚才的一大串代码压缩一下：</p>
+<pre><code>numbers = [0, 1, 2, -3, 5, -8, 13]
+
+# 提取奇数
+result = filter(lambda x: x % 2, numbers)
+print("Odd Numbers are :",list(result))
+
+# 提取偶数
+result = filter(lambda x: x % 2 == 0, numbers)
+print("Even Numbers are :",list(result))
+
+#提取正数
+result = filter(lambda x: x&gt;0, numbers)
+print("Positive Numbers are :",list(result))
+
+Out：Odd Numbers are : [1, -3, 5, 13]
+     Even Numbers are : [0, 2, -8]
+     Positive Numbers are : [1, 2, 5, 13]
+
+</code></pre>
+<p>" 爽啊！爽死了！" 郭德纲看到后这么评价，lambda我平时用的不多，但是写到这里，我也觉得要好好学习它了，毕竟和其他编程语言相比，可能这中用法才是python提倡的理念之一：高效简洁，</p>
+<h3 id="reduce">reduce()</h3>
+<blockquote>
+<p>函数构造</p>
+</blockquote>
+<p>Reduce是一个非常有用的函数，用于在列表上执行某些计算并返回结果。它将滚动计算应用于列表中的连续值。例如，如果要计算整数列表的累积乘，或者求和等等</p>
+<ul>
+<li>基础语法：reduce(function, iterable)</li>
+<li>参数：fun是连续作用于iterable每一个元素的方法，新的参数为上一次执行的结果，iterable为被过滤的可迭代序列</li>
+<li>返回值：最终的function返回结果</li>
+</ul>
+<p>在Python 2中，reduce（）是一个内置函数。但是，在Python 3中，它被移动到functools模块。因此，要使用前我们需要导入，这里我的环境是Python 3.6</p>
+<blockquote>
+<p>基础用法：</p>
+</blockquote>
+<p>先看一个求累加和的小栗子：</p>
+<pre><code>from functools import reduce # Python 3
+
+def do_sum(x1, x2): 
+    return x1 + x2
+    
+print(reduce(do_sum, [1, 2, 3, 4]))
+
+Out：10
+</code></pre>
+<p>再看一个累积乘法的例子：</p>
+<pre><code>from functools import reduce # Python 3
+def multiply(x, y):
+    return x*y
+
+numbers = [1,2,3,4]
+print(reduce(multiply, numbers))
+
+Out：24
+</code></pre>
+<blockquote>
+<p>更进一步：</p>
+</blockquote>
+<p>还是和lambda混搭，更加简洁：</p>
+<pre><code>from functools import reduce # Python 3
+numbers = [1,2,3,4]
+result_multiply = reduce((lambda x, y: x * y), numbers)
+result_add = reduce((lambda x,y: x+y), numbers)
+
+print(result_multiply)
+print(result_add)
+
+Out：24
+     10
+</code></pre>
+<h3 id="zip">zip()</h3>
+<blockquote>
+<p>函数构造</p>
+</blockquote>
+<p>zip（）的目的是映射多个容器的相似索引，以便它们可以仅作为单个实体使用。</p>
+<ul>
+<li>基础语法：zip(*iterators)</li>
+<li>参数：iterators为可迭代的对象，例如list，string</li>
+<li>返回值：返回单个迭代器对象，具有来自所有容器的映射值</li>
+</ul>
+<blockquote>
+<p>基础用法：</p>
+</blockquote>
+<p>其实之前我们在讲dict的创建方法时提到过它，这里从新回顾一下：</p>
+<pre><code>
+keys = ['name','age']
+values = ['xiaobai',18]
+my_dict = dict(zip(keys,values))
+print(my_dict)
+
+Out：{'name': 'xiaobai', 'age': 18}
+
+</code></pre>
+<p>zip可以支持多个对象，比如下面的例子</p>
+<pre><code>name = [ "xiaobai", "john", "mike", "alpha" ]
+age = [ 4, 1, 3, 2 ]
+marks = [ 40, 50, 60, 70 ]
+
+# using zip() to map values
+mapped = list(zip(name, age, marks))
+print ("The zipped result is : "mapped)
+
+Out：The zipped result is : [('xiaobai', 4, 40), ('john', 1, 50), ('mike', 3, 60), ('alpha', 2, 70)]
+
+</code></pre>
+<p>这里我们可以很容易的的把name，age，marks这三个list里面相同index的值映射打包在一起</p>
+<blockquote>
+<p>更进一步：</p>
+</blockquote>
+<p>通过上面的例子，我们发现可以很容易的以类似1对1的形式把不同对象的同一索引位置的值打包起来，那如果是解包呢？也是类似的，就是多了一个 * 而已</p>
+<pre><code>names, ages, marks = zip(*mapped)
+print ("The name list is : ",names)
+print ("The age list is : ",ages)
+print ("The marks list is : ",marks)
+
+Out： The name list is :  ('xiaobai', 'john', 'mike', 'alpha')
+     The age list is :  (4, 1, 3, 2)
+     The marks list is :  (40, 50, 60, 70)
+</code></pre>
+<h2 id="总结">总结</h2>
+<p>今天主要为大家介绍了map，filter，reduce，zip四个高效的python内置函数的用法，我也是刚刚接触，了解不够深入，如果介绍的有错误或者歧义还请大家多多谅解和包容，如果有大神可以进一步补充说明一定要写个评论呀，让我们一起进步。</p>
+
+    </div>
+  </div>
+</body>
+
+</html>

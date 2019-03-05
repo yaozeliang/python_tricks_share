@@ -1,0 +1,604 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python 进阶之路 (四) 先立Flag, 社区最全的Set用法集锦</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__left">
+    <div class="stackedit__toc">
+      
+<ul>
+<li>
+<ul>
+<li><a href="#set是什么">Set是什么</a></li>
+<li><a href="#frozen-sets">Frozen Sets</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+  <div class="stackedit__right">
+    <div class="stackedit__html">
+      <h2 id="set是什么">Set是什么</h2>
+<p>大家好，在上一期详解tuple元组的用法后，今天我们来看Python里面最后一种常见的数据类型：集合(Set)</p>
+<p>与dict类似，set也是一组key的集合，但不存储value。由于key不能重复，所以，在set中，没有重复的key。创建一个set，需要提供一个list作为输入集集合，重复元素在set中会被自动被过滤，通过add(key)方法往set中添加元素，重复添加不会有效果。如果现在你发现我讲的很模糊请不要着急。稍后会有海量例子为大家详解。</p>
+<p>总而言之,Set具有三个显著特点：</p>
+<ul>
+<li>无序</li>
+<li>元素是独一无二的，不允许出现重复的元素</li>
+<li>可以修改集合本身，但集合中包含的元素必须是不可变类型</li>
+</ul>
+<p>现在让我们开启Set奇幻之旅，我希望这篇文章是SegmentFault社区对于Set介绍最全的模范，哈哈！</p>
+<h3 id="定义一个set">定义一个Set</h3>
+<p>我们有两种方式可以创建一个Set，可以使用内置的<strong>set()<strong>方法，或是使用中括号</strong>{}</strong><br>
+创建模板如下：</p>
+<pre><code>                    x = set(&lt;iter&gt;)         
+                    x = {&lt;obj&gt;, &lt;obj&gt;, ..., &lt;obj&gt;}
+
+</code></pre>
+<p>现在让我们来看例子~</p>
+<blockquote>
+<p><strong>set()内置方法创建</strong></p>
+</blockquote>
+<pre><code>x = set(['foo', 'bar', 'baz', 'foo', 'qux'])   # 传入List
+print(x)
+
+y = set(('foo', 'bar', 'baz', 'foo', 'qux'))   #传入元组
+print(y)
+
+Out: {'qux', 'foo', 'bar', 'baz'}  # 注意到无序了吧~
+     {'bar', 'qux', 'baz', 'foo'}
+     
+</code></pre>
+<p>这里要注意用set()内置方法创建时一定要传递一个可以迭代的参数，还有从输出结果相信大家已经发现set的第一个特点了：无序</p>
+<p>字符串也是可迭代的，因此字符串也可以传递给set（）</p>
+<pre><code>s = 'quux'
+a = set(s)
+print(a)
+
+Out: {'u', 'q', 'x'}      # 无序，唯一
+
+</code></pre>
+<p>这里又体现了set的第二个特点：元素唯一性</p>
+<blockquote>
+<p><strong>{} 方法创建</strong></p>
+</blockquote>
+<pre><code>&gt;&gt;&gt; x = {'foo', 'bar', 'baz', 'foo', 'qux'}
+&gt;&gt;&gt; x
+{'qux', 'foo', 'bar', 'baz'}
+</code></pre>
+<p>这里考虑到之后例子太多，实在不能每次都打print啦，这种形式大家看的更清楚，这个直接用{}创建很简单，只要传递进元素就行啦</p>
+<blockquote>
+<p><strong>创建空集合</strong></p>
+</blockquote>
+<p>Set可以是空的。但是，请记住Python将空花括号{}解释为空字典，因此定义空集的唯一方法是使用set（）函数</p>
+<pre><code>&gt;&gt;&gt; x = set()
+&gt;&gt;&gt; type(x)
+&lt;class 'set'&gt;
+
+&gt;&gt;&gt; x = {}
+&gt;&gt;&gt; type(x)
+&lt;class 'dict'&gt;
+
+</code></pre>
+<p>一个空集合用布尔类型显示为False</p>
+<pre><code>&gt;&gt;&gt; x = set()
+&gt;&gt;&gt; bool(x)
+False
+&gt;&gt;&gt; x or 1
+1
+&gt;&gt;&gt; x and 1
+set()
+</code></pre>
+<blockquote>
+<p><strong>对比小结</strong></p>
+</blockquote>
+<p>对于这两种方法创建Set，本质区别在于以下两点</p>
+<ol>
+<li>set（）的参数是可迭代的。它会生成要放入集合中的所有元素组成的List。</li>
+<li>花括号 {} 中的对象完整地放入集合中，即使它们是可迭代的。</li>
+</ol>
+<blockquote>
+<p><strong>补充说明</strong></p>
+</blockquote>
+<p>集合中的元素可以是不同类型的对象，不一定非要是同一类型的，可以包含不同类型，比如：</p>
+<pre><code>&gt;&gt;&gt; x = {42, 'foo', 3.14159, None}
+&gt;&gt;&gt; x
+{None, 'foo', 42, 3.14159}
+</code></pre>
+<p>但同时不要忘记set元素必须是不可变的。例如，元组可以包括在集合中：</p>
+<pre><code>&gt;&gt;&gt; x = {42, 'foo', (1, 2, 3), 3.14159}
+&gt;&gt;&gt; x
+{42, 'foo', 3.14159, (1, 2, 3)}
+</code></pre>
+<p>但列表和字典是可变的，因此它们不能成为Set的元素：</p>
+<pre><code>&gt;&gt;&gt; a = [1, 2, 3]
+&gt;&gt;&gt; {a}
+Traceback (most recent call last):
+  File "&lt;pyshell#70&gt;", line 1, in &lt;module&gt;
+    {a}
+TypeError: unhashable type: 'list'
+
+
+&gt;&gt;&gt; d = {'a': 1, 'b': 2}
+&gt;&gt;&gt; {d}
+Traceback (most recent call last):
+  File "&lt;pyshell#72&gt;", line 1, in &lt;module&gt;
+    {d}
+TypeError: unhashable type: 'dict'
+</code></pre>
+<h3 id="set大小以及成员">Set大小以及成员</h3>
+<p>len（）函数返回集合中元素的数量，而in和not in运算符可用于测试是否为Set中的元素：</p>
+<pre><code>&gt;&gt;&gt; x = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; len(x)
+3
+
+&gt;&gt;&gt; 'bar' in x
+True
+&gt;&gt;&gt; 'qux' in x
+False
+</code></pre>
+<h3 id="set基本操作">Set基本操作</h3>
+<h4 id="方法和运算符"><strong>方法和运算符</strong></h4>
+<p>许多可用于Python其他数据类型的操作对集合没有意义。例如，无法对集合建立索引或切片。但是，Python在set对象上提供了运算符，这些操作符其实很多和数学里是一模一样的，相信数学好的朋友们对这部分简直不要太熟悉</p>
+<p>所以对于Set的操作除了用普通的内置方法，我们也可以使用运算符，比较方便</p>
+<h4 id="union-并集"><strong>Union 并集</strong></h4>
+<ul>
+<li>用法：计算两个或更多集合的并集。</li>
+<li>方法: x1.union(x2[, x3 …])</li>
+<li>运算符：x1 | x2 [| x3 …]<br>
+让我们新建两个Set做测试：</li>
+</ul>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+</code></pre>
+<p>现在我们想求x1,x2的并集，如下图所示：<br>
+<img src="https://lh3.googleusercontent.com/MLemOR9-u30wyOFjmaNgaDFRCP7H9KIXv8BFSejQmr9RJP2jmIzC-NSjCc9rLtYJpw4CzidZihpY" alt="enter image description here"></p>
+<hr>
+<p>具体实现方法如下，或是用方法，或是用操作符：</p>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+
+&gt;&gt;&gt; x1.union(x2)
+{'foo', 'qux', 'quux', 'baz', 'bar'}
+
+&gt;&gt;&gt; x1 | x2
+{'foo', 'qux', 'quux', 'baz', 'bar'}
+</code></pre>
+<p>如果有两个以上的Set也是没有问题的，原理都是一样的：</p>
+<pre><code>&gt;&gt;&gt; a = {1, 2, 3, 4}
+&gt;&gt;&gt; b = {2, 3, 4, 5}
+&gt;&gt;&gt; c = {3, 4, 5, 6}
+&gt;&gt;&gt; d = {4, 5, 6, 7}
+
+&gt;&gt;&gt; a.union(b, c, d)
+{1, 2, 3, 4, 5, 6, 7}
+
+&gt;&gt;&gt; a | b | c | d
+{1, 2, 3, 4, 5, 6, 7}
+</code></pre>
+<h4 id="intersection-交集"><strong>Intersection 交集</strong></h4>
+<ul>
+<li>方法: x1.intersection(x2[, x3 …])</li>
+<li>运算符：x1 &amp; x2 [&amp; x3 …]</li>
+<li>用法：计算两个或更多集合的交集。</li>
+</ul>
+<p>现在还让我们用刚才创建好的两个set，所求部分如下图：</p>
+<p><img src="https://lh3.googleusercontent.com/N4tZ7lsIZbLu9wn5mdQcJSAyQ2CvT1YPc85aqHP9oNC2NnHtf8SMgx7lf0B85B9SiQlp_tAAdox7" alt="enter image description here"></p>
+<pre><code>实现仍然是两种方法：
+
+&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+
+&gt;&gt;&gt; x1.intersection(x2)
+{'baz'}
+
+&gt;&gt;&gt; x1 &amp; x2
+{'baz'}
+</code></pre>
+<p>多个集合的情况公示和方法依然有效，结果仅包含所有指定集合中都存在的元素。</p>
+<pre><code>&gt;&gt;&gt; a = {1, 2, 3, 4}
+&gt;&gt;&gt; b = {2, 3, 4, 5}
+&gt;&gt;&gt; c = {3, 4, 5, 6}
+&gt;&gt;&gt; d = {4, 5, 6, 7}
+
+&gt;&gt;&gt; a.intersection(b, c, d)
+{4}
+
+&gt;&gt;&gt; a &amp; b &amp; c &amp; d
+{4}
+</code></pre>
+<h4 id="difference-差集"><strong>Difference 差集</strong></h4>
+<ul>
+<li>方法: x1.difference(x2[, x3 …])</li>
+<li>运算符：x1 - x2 [- x3 …]</li>
+<li>用法：计算两个或更多集合的差集。大白话说就是x1去除x1和x2的共有元素<br>
+下图所示为x1.difference(x2)的目标结果：</li>
+</ul>
+<p><img src="https://lh3.googleusercontent.com/EUqRwlEdtqq8rDwKm86K8LRuPYcBJ649uMg5IynzkS51MrZTLc1ZfwviCd5-llVqKMjuJVNagfr5" alt="enter image description here"></p>
+<pre><code>    &gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+    &gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+    
+    &gt;&gt;&gt; x1.difference(x2)
+    {'foo', 'bar'}
+    
+    &gt;&gt;&gt; x1 - x2
+    {'foo', 'bar'}
+</code></pre>
+<p>还是老样子，适用于2个及以上的集合：</p>
+<pre><code>&gt;&gt;&gt; a = {1, 2, 3, 30, 300}
+&gt;&gt;&gt; b = {10, 20, 30, 40}
+&gt;&gt;&gt; c = {100, 200, 300, 400}
+
+&gt;&gt;&gt; a.difference(b, c)
+{1, 2, 3}
+
+&gt;&gt;&gt; a - b - c
+{1, 2, 3}
+</code></pre>
+<p>指定多个集合时，操作从左到右执行。在上面的示例中，首先计算a  -  b，得到{1,2,3,300}。然后从该集合中减去c，留下{1,2,3}，具体流程如下图所示：</p>
+<p><img src="https://lh3.googleusercontent.com/vppUaLiFSrmWHvBm0jTuxzatOkIRJuUgIil1WZ8H-XtfCipoEnV3oP8mwNINazd_fYTiKrCw-2zT" alt="enter image description here"></p>
+<h4 id="symmetric-difference-对称差集"><strong>Symmetric Difference 对称差集</strong></h4>
+<ul>
+<li>方法: x1.symmetric_difference(x2)</li>
+<li>运算符：x1 ^ x2 [^ x3 …]</li>
+<li>用法：计算两个或更多集合的差集。大白话说就是x1去除x1和x2的共有元素<br>
+下图所示为x1.symmetric_difference(x2)的目标结果：</li>
+</ul>
+<p><img src="https://lh3.googleusercontent.com/2SKdyDWQVM0ljrEpBe7O41ojlsj0Yl52NjKwJqC9I9kh2Rv6_113FSZop7c7jSUElT2bRRjQBLiY" alt="enter image description here"><br>
+实现方法如下；</p>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+
+&gt;&gt;&gt; x1.symmetric_difference(x2)
+{'foo', 'qux', 'quux', 'bar'}
+
+&gt;&gt;&gt; x1 ^ x2
+{'foo', 'qux', 'quux', 'bar'}
+</code></pre>
+<p>老规矩，支持2个及以上set的连续操作:</p>
+<pre><code>&gt;&gt;&gt; a = {1, 2, 3, 4, 5}
+&gt;&gt;&gt; b = {10, 2, 3, 4, 50}
+&gt;&gt;&gt; c = {1, 50, 100}
+
+&gt;&gt;&gt; a ^ b ^ c
+{100, 5, 10}
+</code></pre>
+<p>当指定多个集合时，操作从左到右执行,奇怪的是，<em><strong>虽然 ^ 运算符允许多个集合，但.symmetric_difference（）方法不允许</strong></em></p>
+<pre><code>&gt;&gt;&gt; a = {1, 2, 3, 4, 5}
+&gt;&gt;&gt; b = {10, 2, 3, 4, 50}
+&gt;&gt;&gt; c = {1, 50, 100}
+
+&gt;&gt;&gt; a.symmetric_difference(b, c)
+Traceback (most recent call last):
+  File "&lt;pyshell#11&gt;", line 1, in &lt;module&gt;
+    a.symmetric_difference(b, c)
+TypeError: symmetric_difference() takes exactly one argument (2 given)
+</code></pre>
+<h4 id="x1.isdisjointx2-判断是否相交"><strong>x1.isdisjoint(x2) 判断是否相交</strong></h4>
+<ul>
+<li>方法: x1.isdisjoint(x2)</li>
+<li>用法：确定两个集合是否具有任何共同的元素</li>
+</ul>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+
+&gt;&gt;&gt; x1.isdisjoint(x2)
+False
+
+&gt;&gt;&gt; x2 - {'baz'}
+{'quux', 'qux'}
+&gt;&gt;&gt; x1.isdisjoint(x2 - {'baz'})
+True
+</code></pre>
+<p>从这个栗子可以看出，如果两个Set没有共同元素返回True，如果有返回True，如果返回True同时也意味着<br>
+他们之间的交集为空集，这个很好理解：</p>
+<pre><code>&gt;&gt;&gt; x1 = {1, 3, 5}
+&gt;&gt;&gt; x2 = {2, 4, 6}
+
+&gt;&gt;&gt; x1.isdisjoint(x2)
+True
+&gt;&gt;&gt; x1 &amp; x2
+set()
+</code></pre>
+<p><em><strong>注意：目前还没有运算符对应这个方法</strong></em></p>
+<h4 id="x1.issubsetx2---判断x1是否为x2子集"><strong>x1.issubset(x2)   判断x1是否为x2子集</strong></h4>
+<ul>
+<li>方法: x1.issubset(x2)</li>
+<li>运算符：x1 &lt;= x2</li>
+<li>用法：如果返回True，x1为x2子集，反之返回False</li>
+</ul>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x1.issubset({'foo', 'bar', 'baz', 'qux', 'quux'})
+True
+
+&gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+&gt;&gt;&gt; x1 &lt;= x2
+False
+</code></pre>
+<p>一个集合本身当然是它自己的子集啦：</p>
+<pre><code>&gt;&gt;&gt; x = {1, 2, 3, 4, 5}
+&gt;&gt;&gt; x.issubset(x)
+True
+&gt;&gt;&gt; x &lt;= x
+True
+</code></pre>
+<h4 id="x1x2---判断x1是否为x2的真子集"><strong>x1&lt;x2   判断x1是否为x2的真子集</strong></h4>
+<ul>
+<li>运算符：x1&lt;x2</li>
+<li>用法：判断x1是否为x2的真子集，如果返回True，x1为x2的真子集，反之返回False</li>
+</ul>
+<p>首先。。。让我们回顾一下数学知识：真子集与子集类似，除了集合不能相同。如果x1的每个元素都在x2中，并且x1和x2不相等，则集合x1被认为是另一个集合x2的真子集</p>
+<p>换个高大上的说法也可以：如果集合A⊆B，存在元素x∈B，且元素x不属于集合A，我们称集合A与集合B有真包含关系，集合A是集合B的真子集（proper subset）。记作A⊊B（或B⊋A），读作“A真包含于B”（或“B真包含A”）</p>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar'}
+&gt;&gt;&gt; x2 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x1 &lt; x2
+True
+
+&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x1 &lt; x2
+False
+</code></pre>
+<p>虽然Set被认为是其自身的子集，但它本身并不是自己的真子集：</p>
+<pre><code>&gt;&gt;&gt; x = {1, 2, 3, 4, 5}
+&gt;&gt;&gt; x &lt;= x
+True
+&gt;&gt;&gt; x &lt; x
+False
+</code></pre>
+<p><em><strong>注意：目前还没有方法对应这个运算符</strong></em></p>
+<h4 id="x1.issupersetx2--判断x1是否为x2的超集"><strong>x1.issuperset(x2)  判断x1是否为x2的超集</strong></h4>
+<ul>
+<li>方法：x1.issuperset(x2)</li>
+<li>运算符：x1 &gt;= x2</li>
+<li>用法：判断x1是否为x2的超集，如果是返回True，反之返回False</li>
+</ul>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+
+&gt;&gt;&gt; x1.issuperset({'foo', 'bar'})
+True
+
+&gt;&gt;&gt; x2 = {'baz', 'qux', 'quux'}
+&gt;&gt;&gt; x1 &gt;= x2
+False
+</code></pre>
+<p>我们刚才已经看到过了一个Set是它自己本身的子集，这里也是一样的，它同时也是自己的超集</p>
+<pre><code>&gt;&gt;&gt; x = {1, 2, 3, 4, 5}
+&gt;&gt;&gt; x.issuperset(x)
+True
+&gt;&gt;&gt; x &gt;= x
+True
+</code></pre>
+<h4 id="x1--x2--判断x1是否为x2的真超集">x1 &gt; x2  判断x1是否为x2的真超集</h4>
+<ul>
+<li>运算符：x1 &gt; x2</li>
+<li>用法：判断x1是否为x2的真超集，如果是返回True，反之返回False</li>
+</ul>
+<p>真超集与超集相同，除了集合不能相同。如果x1包含x2的每个元素，并且x1和x2不相等，则集合x1被认为是另一个集合x2的真超集。</p>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'foo', 'bar'}
+&gt;&gt;&gt; x1 &gt; x2
+True
+
+&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x1 &gt; x2
+False
+</code></pre>
+<p>一个集合不是它自己的真超集，和真子集的原理相同</p>
+<pre><code>&gt;&gt;&gt; x = {1, 2, 3, 4, 5}
+&gt;&gt;&gt; x &gt; x
+False
+</code></pre>
+<h3 id="对set进行修改">对Set进行修改</h3>
+<p>虽然集合中包含的元素必须是不可变类型，但可以修改集合本身。与上面的操作类似，可以使用多种运算符和方法来更改集合的内容。</p>
+<h4 id="x1.updatex2-通过union修改集合元素">x1.update(x2) 通过union修改集合元素</h4>
+<ul>
+<li>方法：x1.update(x2[, x3 …])</li>
+<li>运算符：x1 |= x2 [| x3 …]</li>
+<li>用法：通过union修改集合</li>
+</ul>
+<p>x1.update(x2) 和 x1 |= x2 作用是向集合x1中添加x2中所有x1不存在的元素。<br>
+停下3秒，我仔细读了这句话，觉得我表达的还可以，不知道大家读上去绕不绕，先看例子：</p>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'foo', 'baz', 'qux'}
+
+&gt;&gt;&gt; x1 |= x2
+&gt;&gt;&gt; x1
+{'qux', 'foo', 'bar', 'baz'}
+
+&gt;&gt;&gt; x1.update(['corge', 'garply'])
+&gt;&gt;&gt; x1
+{'qux', 'corge', 'garply', 'foo', 'bar', 'baz'}
+</code></pre>
+<h4 id="x1.intersectionx2-通过intersection修改集合元素">x1.intersection(x2) 通过intersection修改集合元素</h4>
+<ul>
+<li>方法：x1.intersection_update(x2[, x3 …])</li>
+<li>运算符：x1 &amp;= x2 [&amp; x3 …]</li>
+<li>用法：通过intersection修改集合<br>
+x1.intersection_update(x2) 和 x1 &amp;= x2 会让x1只保留x1和x2的交集部分：</li>
+</ul>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'foo', 'baz', 'qux'}
+
+&gt;&gt;&gt; x1 &amp;= x2
+&gt;&gt;&gt; x1
+{'foo', 'baz'}
+
+&gt;&gt;&gt; x1.intersection_update(['baz', 'qux'])
+&gt;&gt;&gt; x1
+{'baz'}
+</code></pre>
+<h4 id="x1.difference_updatex2-通过difference修改集合元素">x1.difference_update(x2) 通过difference修改集合元素</h4>
+<ul>
+<li>方法：x1.difference_update(x2[, x3 …])</li>
+<li>运算符：x1 -= x2 [| x3 …]</li>
+<li>用法：通过difference修改集合</li>
+</ul>
+<p>x1.difference_update(x2) and x1 -= x2 会让集合x1移除所有在x2出现的属于x1的元素：</p>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'foo', 'baz', 'qux'}
+
+&gt;&gt;&gt; x1 -= x2
+&gt;&gt;&gt; x1
+{'bar'}
+
+&gt;&gt;&gt; x1.difference_update(['foo', 'bar', 'qux'])
+&gt;&gt;&gt; x1
+set()
+</code></pre>
+<h4 id="x1.symmetric_difference_updatex2-通过对称差集修改集合元素">x1.symmetric_difference_update(x2) 通过对称差集修改集合元素</h4>
+<ul>
+<li>方法：x1.symmetric_difference_update(x2)</li>
+<li>运算符：x1 ^= x2<br>
+这个我实在用语言解释不清了，看例子容易懂:</li>
+</ul>
+<pre><code>&gt;&gt;&gt; x1 = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x2 = {'foo', 'baz', 'qux'}
+&gt;&gt;&gt; 
+&gt;&gt;&gt; x1 ^= x2
+&gt;&gt;&gt; x1
+{'bar', 'qux'}
+&gt;&gt;&gt; 
+&gt;&gt;&gt; x1.symmetric_difference_update(['qux', 'corge'])
+&gt;&gt;&gt; x1
+{'bar', 'corge'}
+</code></pre>
+<h4 id="x.add--添加元素">x.add( ) 添加元素</h4>
+<p>这个就很简单了, 类似List:</p>
+<pre><code>&gt;&gt;&gt; x = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x.add('qux')
+&gt;&gt;&gt; x
+{'bar', 'baz', 'foo', 'qux'}
+</code></pre>
+<h4 id="x.removeelem-删除元素">x.remove() 删除元素</h4>
+<p>如果删除的元素不存在会抛出异常</p>
+<pre><code>&gt;&gt;&gt; x = {'foo', 'bar', 'baz'}
+
+&gt;&gt;&gt; x.remove('baz')
+&gt;&gt;&gt; x
+{'bar', 'foo'}
+
+&gt;&gt;&gt; x.remove('qux')
+Traceback (most recent call last):
+  File "&lt;pyshell#58&gt;", line 1, in &lt;module&gt;
+    x.remove('qux')
+KeyError: 'qux'
+</code></pre>
+<p>这个时候为了避免出现错误可以用discard方法</p>
+<pre><code>&gt;&gt;&gt; x = {'foo', 'bar', 'baz'}
+
+&gt;&gt;&gt; x.discard('baz')
+&gt;&gt;&gt; x
+{'bar', 'foo'}
+
+&gt;&gt;&gt; x.discard('qux')
+&gt;&gt;&gt; x
+{'bar', 'foo'}
+</code></pre>
+<p>利用pop删除随机元素并返回：</p>
+<pre><code>&gt;&gt;&gt; x = {'foo', 'bar', 'baz'}
+
+&gt;&gt;&gt; x.pop()
+'bar'
+&gt;&gt;&gt; x
+{'baz', 'foo'}
+
+&gt;&gt;&gt; x.pop()
+'baz'
+&gt;&gt;&gt; x
+{'foo'}
+
+&gt;&gt;&gt; x.pop()
+'foo'
+&gt;&gt;&gt; x
+set()
+</code></pre>
+<p>利用clear可以清空一个集合：</p>
+<pre><code>&gt;&gt;&gt; x = {'foo', 'bar', 'baz'}
+&gt;&gt;&gt; x
+{'foo', 'bar', 'baz'}
+&gt;&gt;&gt; 
+&gt;&gt;&gt; x.clear()
+&gt;&gt;&gt; x
+set()
+</code></pre>
+<h2 id="frozen-sets">Frozen Sets</h2>
+<blockquote>
+<p><strong>Frozen Sets是什么东西</strong></p>
+</blockquote>
+<p>Python提供了另一种称为冻结集合Frozen Sets的内置类型，它在所有方面都与集合完全相同，只不过Frozen Sets是不可变的。我们可以对冻结集执行非修改操作，比如：</p>
+<pre><code>&gt;&gt;&gt; x = frozenset(['foo', 'bar', 'baz'])
+&gt;&gt;&gt; x
+frozenset({'foo', 'baz', 'bar'})
+
+&gt;&gt;&gt; len(x)
+3
+
+&gt;&gt;&gt; x &amp; {'baz', 'qux', 'quux'}
+frozenset({'baz'})
+</code></pre>
+<p>如果胆敢尝试修改Frozen Sets：</p>
+<pre><code>&gt;&gt;&gt; x = frozenset(['foo', 'bar', 'baz'])
+
+&gt;&gt;&gt; x.add('qux')
+Traceback (most recent call last):
+  File "&lt;pyshell#127&gt;", line 1, in &lt;module&gt;
+    x.add('qux')
+AttributeError: 'frozenset' object has no attribute 'add'
+
+&gt;&gt;&gt; x.pop()
+Traceback (most recent call last):
+  File "&lt;pyshell#129&gt;", line 1, in &lt;module&gt;
+    x.pop()
+AttributeError: 'frozenset' object has no attribute 'pop'
+
+&gt;&gt;&gt; x.clear()
+Traceback (most recent call last):
+  File "&lt;pyshell#131&gt;", line 1, in &lt;module&gt;
+    x.clear()
+AttributeError: 'frozenset' object has no attribute 'clear'
+
+&gt;&gt;&gt; x
+frozenset({'foo', 'bar', 'baz'})
+</code></pre>
+<blockquote>
+<p><strong>基本使用举例</strong></p>
+</blockquote>
+<p>Frozensets在我们想要使用集合的情况下很有用，但需要一个不可变对象。<br>
+例如，如果没有Frozen sets我们不能定义其元素也是集合的集合（nested），因为集合元素必须是不可变的，会报错：</p>
+<pre><code>&gt;&gt;&gt; x1 = set(['foo'])
+&gt;&gt;&gt; x2 = set(['bar'])
+&gt;&gt;&gt; x3 = set(['baz'])
+&gt;&gt;&gt; x = {x1, x2, x3}
+Traceback (most recent call last):
+  File "&lt;pyshell#38&gt;", line 1, in &lt;module&gt;
+    x = {x1, x2, x3}
+TypeError: unhashable type: 'set'
+</code></pre>
+<p>现在有了 Frozen sets，我们有了解决方案：</p>
+<pre><code>&gt;&gt;&gt; x1 = frozenset(['foo'])
+&gt;&gt;&gt; x2 = frozenset(['bar'])
+&gt;&gt;&gt; x3 = frozenset(['baz'])
+&gt;&gt;&gt; x = {x1, x2, x3}
+&gt;&gt;&gt; x
+{frozenset({'bar'}), frozenset({'baz'}), frozenset({'foo'})}
+</code></pre>
+<h2 id="总结">总结</h2>
+<p>这一期为大家讲了太多东西，一口老血吐在键盘上，总结不动了<br>
+只希望这期Set详解介绍可以帮助到大家，如果帮到了你，就点个赞吧~~<br>
+最后再次祝大家猪年大吉！！</p>
+
+    </div>
+  </div>
+</body>
+
+</html>

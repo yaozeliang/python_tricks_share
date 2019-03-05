@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python 进阶之路 (十一) 再立Flag, 社区最全的itertools深度解析（下）</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__left">
+    <div class="stackedit__toc">
+      
+<ul>
+<li>
+<ul>
+<li><a href="#简单实战">简单实战</a></li>
+<li><a href="#实战分析标准普尔500指数">实战:分析标准普尔500指数</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+  <div class="stackedit__right">
+    <div class="stackedit__html">
+      <h2 id="简单实战"><strong>简单实战</strong></h2>
+<p>大家好，我又来了，在经过之前两篇文章的介绍后相信大家对itertools的一些常见的好用的方法有了一个大致的了解，我自己在学完之后仿照别人的例子进行了真实场景下的模拟练习，今天和大家一起分享，有很多部分还可以优化，希望有更好主意和建议的朋友们可以留言哈，让我们一起进步</p>
+<h2 id="实战分析标准普尔500指数">实战:分析标准普尔500指数</h2>
+<h3 id="数据源及目标">数据源及目标</h3>
+<p>在这个例子中，我们首先尝试使用itertools来操作大型数据集：标准普尔500指数的历史每日价格数据。 我会在这个部分的最后附上下载链接和py文件，这里的数据源来自<a href="https://finance.yahoo.com/quote/%5EGSPC?p=%5EGSPC&amp;guccounter=1&amp;guce_referrer=aHR0cHM6Ly9yZWFscHl0aG9uLmNvbS9weXRob24taXRlcnRvb2xzLw&amp;guce_referrer_sig=zWyw2jQagm5AfJpcL0XEuPudKH5TSk2liQKEqwDG-0k">雅虎财经</a></p>
+<blockquote>
+<p>目标： 找到标准普尔500指数的单日最大收益，最大损失（百分比），和最长的增长周期</p>
+</blockquote>
+<p>首先我们手上得到了 SP500.csv ，让我们对数据有个大概的印象，前十行的数据如下：</p>
+<pre class=" language-python"><code class="prism  language-python">Date<span class="token punctuation">,</span>Open<span class="token punctuation">,</span>High<span class="token punctuation">,</span>Low<span class="token punctuation">,</span>Close<span class="token punctuation">,</span>Adj Close<span class="token punctuation">,</span>Volume
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">03</span><span class="token punctuation">,</span><span class="token number">16.660000</span><span class="token punctuation">,</span><span class="token number">16.660000</span><span class="token punctuation">,</span><span class="token number">16.660000</span><span class="token punctuation">,</span><span class="token number">16.660000</span><span class="token punctuation">,</span><span class="token number">16.660000</span><span class="token punctuation">,</span><span class="token number">1260000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">04</span><span class="token punctuation">,</span><span class="token number">16.850000</span><span class="token punctuation">,</span><span class="token number">16.850000</span><span class="token punctuation">,</span><span class="token number">16.850000</span><span class="token punctuation">,</span><span class="token number">16.850000</span><span class="token punctuation">,</span><span class="token number">16.850000</span><span class="token punctuation">,</span><span class="token number">1890000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">05</span><span class="token punctuation">,</span><span class="token number">16.930000</span><span class="token punctuation">,</span><span class="token number">16.930000</span><span class="token punctuation">,</span><span class="token number">16.930000</span><span class="token punctuation">,</span><span class="token number">16.930000</span><span class="token punctuation">,</span><span class="token number">16.930000</span><span class="token punctuation">,</span><span class="token number">2550000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">06</span><span class="token punctuation">,</span><span class="token number">16.980000</span><span class="token punctuation">,</span><span class="token number">16.980000</span><span class="token punctuation">,</span><span class="token number">16.980000</span><span class="token punctuation">,</span><span class="token number">16.980000</span><span class="token punctuation">,</span><span class="token number">16.980000</span><span class="token punctuation">,</span><span class="token number">2010000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">09</span><span class="token punctuation">,</span><span class="token number">17.080000</span><span class="token punctuation">,</span><span class="token number">17.080000</span><span class="token punctuation">,</span><span class="token number">17.080000</span><span class="token punctuation">,</span><span class="token number">17.080000</span><span class="token punctuation">,</span><span class="token number">17.080000</span><span class="token punctuation">,</span><span class="token number">2520000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">10</span><span class="token punctuation">,</span><span class="token number">17.030001</span><span class="token punctuation">,</span><span class="token number">17.030001</span><span class="token punctuation">,</span><span class="token number">17.030001</span><span class="token punctuation">,</span><span class="token number">17.030001</span><span class="token punctuation">,</span><span class="token number">17.030001</span><span class="token punctuation">,</span><span class="token number">2160000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">11</span><span class="token punctuation">,</span><span class="token number">17.090000</span><span class="token punctuation">,</span><span class="token number">17.090000</span><span class="token punctuation">,</span><span class="token number">17.090000</span><span class="token punctuation">,</span><span class="token number">17.090000</span><span class="token punctuation">,</span><span class="token number">17.090000</span><span class="token punctuation">,</span><span class="token number">2630000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">12</span><span class="token punctuation">,</span><span class="token number">16.760000</span><span class="token punctuation">,</span><span class="token number">16.760000</span><span class="token punctuation">,</span><span class="token number">16.760000</span><span class="token punctuation">,</span><span class="token number">16.760000</span><span class="token punctuation">,</span><span class="token number">16.760000</span><span class="token punctuation">,</span><span class="token number">2970000</span>
+<span class="token number">1950</span><span class="token operator">-</span><span class="token number">01</span><span class="token operator">-</span><span class="token number">13</span><span class="token punctuation">,</span><span class="token number">16.670000</span><span class="token punctuation">,</span><span class="token number">16.670000</span><span class="token punctuation">,</span><span class="token number">16.670000</span><span class="token punctuation">,</span><span class="token number">16.670000</span><span class="token punctuation">,</span><span class="token number">16.670000</span><span class="token punctuation">,</span><span class="token number">3330000</span>
+</code></pre>
+<p>为了实现目标，具体思路如下：</p>
+<ul>
+<li>读取csv文件，并利用 Adj Close这一列转换为每日百分比变化的序列，代表收益，命名为gain</li>
+<li>找到gain这一序列中的最大值和最小值,并且找到对应的日期，当然，有可能会出现对应多个日期的情况，我们这里选取日期最近的就好。</li>
+<li>定义一个sequence叫做growth_streaks，其中包含了所有 gain中出现的连续为正值的元素组成的tuple，我们要找到这些tuples中长度最长的一个，从而定位其对应的开始时间和结束时间,当然这里也是一样，有可能出现最大长度一样的的情况，这种情况下，我们还是选择日期最近的。</li>
+</ul>
+<p>这里有关百分比的计算公式如下：</p>
+<p><img src="https://lh3.googleusercontent.com/m6HynNinsY1r-Wxzyvv01nV9639C0H1hrjoO5NSSJrzaEn5ZuesOeMyr-oA8jKBVTVIt-BPz7Hjf" alt="enter image description here"></p>
+<h3 id="分步实现">分步实现</h3>
+<p>首先在这里，我们会经常处理日期，为了方便后续操作，这里我们引入collections模块的namedtuple来实现对日期的相关操作：</p>
+<pre class=" language-python"><code class="prism  language-python"><span class="token keyword">from</span> collections <span class="token keyword">import</span> namedtuple
+
+
+<span class="token keyword">class</span> <span class="token class-name">DataPoint</span><span class="token punctuation">(</span>namedtuple<span class="token punctuation">(</span><span class="token string">'DataPoint'</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">'date'</span><span class="token punctuation">,</span> <span class="token string">'value'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __slots__ <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">def</span> <span class="token function">__le__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> other<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>value <span class="token operator">&lt;=</span> other<span class="token punctuation">.</span>value
+
+    <span class="token keyword">def</span> <span class="token function">__lt__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> other<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>value <span class="token operator">&lt;</span> other<span class="token punctuation">.</span>value
+
+    <span class="token keyword">def</span> <span class="token function">__gt__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> other<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>value <span class="token operator">&gt;</span> other<span class="token punctuation">.</span>value
+</code></pre>
+<p>这里有很多小技巧，之后我会再系统的开一个Python OOP笔记，会为大家都讲到，这里面涉及的小知识点如下：</p>
+<ul>
+<li>slots ：这是一个节省变量内存的好东西，__slot__后面一般都是跟class中 init 方法里面用到的变量，好处在于能够大量节省内存</li>
+<li>namedtuple：可以实现类似属性一样调用tuple里面的元素，我在collections里面详细说过，大家可以看看：<a href="https://segmentfault.com/a/1190000018145641">Python 进阶之路 (七) 隐藏的神奇宝藏：探秘Collections</a></li>
+<li>le:运算符重载，可以得到class中一个变量的长度，必须是整数，也就是说如果传入的是list，dict，tuple，set这些一定没有问题，因为这些序列的长度一定是整数，这里面传递的是tuple（）</li>
+<li>lt：运算符重载（less than ）：可以实现利用 &lt; 比较一个class的不同对象中的值大小的比较</li>
+<li>gt：运算符重载（greater than）：可以实现利用 &gt; 比较一个class的不同对象中的值大小的比较</li>
+</ul>
+<p>下面为了唤醒大家的记忆，我这里快速举一个有关于namedtuple，le，lt，gt的小栗子：</p>
+<pre><code>from collections import namedtuple
+class Person(namedtuple('person', ['name', 'age','city','job'])):
+
+    def __le__(self):
+        return len(self)
+
+    def __lt__(self,other):
+        return self.age &lt; other.age
+
+    def __gt__(self,other):
+        return self.age &gt; other.age
+
+
+xiaobai = Person('xiaobai', 18, 'paris','student')
+laobai = Person('Walter White',52, 'albuquerque','cook')
+
+
+print('Infomation for first person: ', xiaobai)     # 显示全部信息
+print('Age of second person is: ', laobai.age)    # 根据name得到tuple的数据
+print(len(xiaobai))
+print(xiaobai &gt; laobai)
+print(xiaobai &lt; laobai)
+
+
+Out: Infomation for first person:  Person(name='xiaobai', age=18, city='paris',job='student')
+     Age of second person is:  52
+     4
+     False
+     True
+</code></pre>
+<p>如果大家对这个例子中的一些地方还有疑问，不用担心，我会在下一个专栏Python OOP学习笔记中和大家慢慢说的<br>
+。好的，现在回到刚才的实战：</p>
+<pre><code>from collections import namedtuple
+
+class DataPoint(namedtuple('DataPoint', ['date', 'value'])):
+    __slots__ = ()
+
+    def __le__(self, other):
+        return self.value &lt;= other.value
+
+    def __lt__(self, other):
+        return self.value &lt; other.value
+
+    def __gt__(self, other):
+        return self.value &gt; other.value
+</code></pre>
+<p>这里我们的DataPoint类有两个主要属性，一个是datetime类型的日期，一个是当天的标普500值</p>
+<p>接下来让我们读取csv文件,并将每行中的Date和Adj Close列中的值存为DataPoint的对象，最后把所有的对象组合为一个sequence序列：</p>
+<pre><code>import csv
+from datetime import datetime
+
+
+def read_prices(csvfile, _strptime=datetime.strptime):
+    with open(csvfile) as infile:
+        reader = csv.DictReader(infile)
+        for row in reader:
+            yield DataPoint(date=_strptime(row['Date'], '%Y-%m-%d').date(),
+                            value=float(row['Adj Close']))
+
+
+prices = tuple(read_prices('SP500.csv'))
+</code></pre>
+<p>read_prices（）生成器打开 SP500.csv 并使用 csv.DictReader（）读取数据的每一行。DictReader（）将每一行作为 OrderedDict 返回，其中key是每行中的列名。</p>
+<p>对于每一行，read_prices（）都会生成一个DataPoint对象，其中包含“Date”和“Adj Close”列中的值。 最后，完整的数据点序列作为元组提交给内存并存储在prices变量中</p>
+<blockquote>
+<p><strong>Ps： Ordereddict是我在collections中漏掉的知识点，我马上会补上，大家可以随时收藏<a href="https://segmentfault.com/a/1190000018145641">Python 进阶之路 (七) 隐藏的神奇宝藏：探秘Collections</a>，我会继续更新</strong></p>
+</blockquote>
+<p>接下来我们要把prices这个转变为表达每日价格变化百分比的序列，利用的公式就是刚才提到的，如果忘了的朋友可以往回翻~</p>
+<pre><code>gains = tuple(DataPoint(day.date, 100*(day.value/prev_day.value - 1.))
+                for day, prev_day in zip(prices[1:], prices))
+</code></pre>
+<p>为了得到标普500单日最大涨幅，我们可以用一下方法：</p>
+<pre><code>max_gain = DataPoint(None, 0)
+for data_point in gains:
+    max_gain = max(data_point, max_gain)
+
+print(max_gain)   # DataPoint(date='2008-10-28', value=11.58)
+</code></pre>
+<p>我们可以把这个方法用之前提到过的reduce简化一下：</p>
+<pre><code>import functools as ft
+
+max_gain = ft.reduce(max, gains)
+
+print(max_gain)  # DataPoint(date='2008-10-28', value=11.58)
+</code></pre>
+<p>这里有关reduce 和 lambda的用法，我们可以通过一个小栗子来回忆一下：</p>
+<pre><code>import functools as ft
+x = ft.reduce(lambda x,y:x+y,[1, 2, 3, 4, 5])
+print(x)
+
+Out: 15
+</code></pre>
+<p>当然，如果求和在实际场景直接用sum就好，这里只是为了让大家有个印象，如果回忆不起来的老铁们也没有关系，轻轻点击以下链接立刻重温：</p>
+<ul>
+<li><a href="https://segmentfault.com/a/1190000018114755">Python 进阶之路 (五) map, filter, reduce, zip 一网打尽</a></li>
+<li><a href="https://segmentfault.com/a/1190000018121906">Python 进阶之路 (六) 九浅一深 lambda，陈独秀你给我坐下！</a></li>
+</ul>
+<p>好了，书规正传，我们发现用reduce改进了for循环后得到了同样的结果，单日最大涨幅的日期也一样，但是这里需要注意的是reduce和刚才的for循环完全不是一回事</p>
+<p>我们可以想象一下，假如CSV文件中的数据每天都是跌的话。 max_gain最后到底是多少？</p>
+<p>在 for 循环中，首先设置max_gain = DataPoint（None，0），因此如果没有涨幅，则最终的max_gain值将是此空 DataPoint 对象。但是，reduce（）解决方案会返回最小的单日跌幅，这不是我们想要的，可能会引入一个难以找到的bug</p>
+<p>这就是itertools可以帮助到我们的地方。 itertools.filterfalse（）函数有两个参数：一个返回True或False的函数，和一个可迭代的输入。它返回一个迭代器，是迭代结果都为False的情况。这里是个小栗子：</p>
+<pre class=" language-python"><code class="prism  language-python"><span class="token keyword">import</span> itertools <span class="token keyword">as</span> it
+only_positives <span class="token operator">=</span> it<span class="token punctuation">.</span>filterfalse<span class="token punctuation">(</span><span class="token keyword">lambda</span> x<span class="token punctuation">:</span> x <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token builtin">list</span><span class="token punctuation">(</span>only_positives<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+
+Out：<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>
+
+</code></pre>
+<p>所以现在我们可以用 itertools.filterfalse（）去除掉gains中那些小于0或者为负数的值，这样reduce会仅仅作用在我们想要的正收益上：</p>
+<pre><code>max_gain = ft.reduce(max, it.filterfalse(lambda p: p &lt;= 0, gains))
+
+</code></pre>
+<p>这里我们默认为gains中一定存在大于0的值，这也是事实，但是如果假设gains中没有的话，我们会报错，因此在使用itertools.filterfalse（）的实际场景中要注意到这一点。</p>
+<p>针对这种情况，可能你想到的应对方案是在合适的情况下添加TryExpect捕获错误，但是reduce有个更好的解决方案，reuce里面可以传递第三个参数，用做reduce返回结果不存在时的默认值，这一点和字典的get方法有异曲同工之妙，如果对get有疑问的朋友可以回顾我之前的文章：<a href="https://segmentfault.com/a/1190000018102693">Python 进阶之路 (二) Dict 进阶宝典，初二快乐！</a>，还是看一个小栗子：</p>
+<pre><code>&gt;&gt;&gt; ft.reduce(max, it.filterfalse(lambda x: x &lt;= 0, [-1, -2, -3]), 0)
+0
+</code></pre>
+<p>这回很好理解了，因此我们应用到我们标准普尔指数的实战上：</p>
+<pre class=" language-python"><code class="prism  language-python">zdp <span class="token operator">=</span> DataPoint<span class="token punctuation">(</span><span class="token boolean">None</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>  <span class="token comment"># zero DataPoint</span>
+max_gain <span class="token operator">=</span> ft<span class="token punctuation">.</span><span class="token builtin">reduce</span><span class="token punctuation">(</span><span class="token builtin">max</span><span class="token punctuation">,</span> it<span class="token punctuation">.</span>filterfalse<span class="token punctuation">(</span><span class="token keyword">lambda</span> p<span class="token punctuation">:</span> p<span class="token punctuation">.</span>value <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">,</span> diffs<span class="token punctuation">)</span><span class="token punctuation">,</span> zdp<span class="token punctuation">)</span>
+</code></pre>
+<p>同理，对于标普500单日最大跌幅我们也照猫画虎：</p>
+<pre><code>max_loss = ft.reduce(min, it.filterfalse(lambda p: p.value &gt; 0, gains), zdp)
+
+print(max_loss)  # DataPoint(date='2018-02-08', value=-20.47)
+</code></pre>
+<p>根据我们的数据源是2018年2月8号那一天，我没有谷歌查询那一天发生了什么，大家感兴趣可以看看哈，但是应该是没有问题的，因为数据源来自雅虎财经</p>
+<p>现在我们已经得到了标普500历史上的单日最大涨跌的日期，我们接下来要找到它的最长时间段，其实这个问题等同于在gains序列中找到最长的连续为正数的点的集合，itertools.takewhile（）和itertools.dropwhile（）函数非常适合处理这种情况。</p>
+<p>itertools.takewhile（）接受两个参数，一个为判断的条件，一个为可迭代的序列，会返回第一个判断结果为False时之前的迭代过的所有元素，下面的小栗子很好的解释了这一点</p>
+<pre><code>it.takewhile(lambda x: x &lt; 3, [0, 1, 2, 3, 4])  # 0, 1, 2
+</code></pre>
+<p>itertools.dropwhile() 则恰恰相反：</p>
+<pre><code>it.dropwhile(lambda x: x &lt; 3, [0, 1, 2, 3, 4])  # 3, 4
+
+</code></pre>
+<p>因此我们可以创建一下方法来实现在gains中找到连续为正数的序列：</p>
+<pre><code>def consecutive_positives(sequence, zero=0):
+    def _consecutives():
+        for itr in it.repeat(iter(sequence)):
+            yield tuple(it.takewhile(lambda p: p &gt; zero,
+                                     it.dropwhile(lambda p: p &lt;= zero, itr)))
+    return it.takewhile(lambda t: len(t), _consecutives())
+    
+growth_streaks = consecutive_positives(gains, zero=DataPoint(None, 0))
+longest_streak = ft.reduce(lambda x, y: x if len(x) &gt; len(y) else y,
+                           growth_streaks)
+</code></pre>
+<p>最后让我们看一下完整的代码：</p>
+<pre class=" language-python"><code class="prism  language-python"><span class="token keyword">from</span> collections <span class="token keyword">import</span> namedtuple
+<span class="token keyword">import</span> csv
+<span class="token keyword">from</span> datetime <span class="token keyword">import</span> datetime
+<span class="token keyword">import</span> itertools <span class="token keyword">as</span> it
+<span class="token keyword">import</span> functools <span class="token keyword">as</span> ft
+
+
+<span class="token keyword">class</span> <span class="token class-name">DataPoint</span><span class="token punctuation">(</span>namedtuple<span class="token punctuation">(</span><span class="token string">'DataPoint'</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">'date'</span><span class="token punctuation">,</span> <span class="token string">'value'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __slots__ <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">def</span> <span class="token function">__le__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> other<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>value <span class="token operator">&lt;=</span> other<span class="token punctuation">.</span>value
+
+    <span class="token keyword">def</span> <span class="token function">__lt__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> other<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>value <span class="token operator">&lt;</span> other<span class="token punctuation">.</span>value
+
+    <span class="token keyword">def</span> <span class="token function">__gt__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> other<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>value <span class="token operator">&gt;</span> other<span class="token punctuation">.</span>value
+
+
+<span class="token keyword">def</span> <span class="token function">consecutive_positives</span><span class="token punctuation">(</span>sequence<span class="token punctuation">,</span> zero<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">_consecutives</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">for</span> itr <span class="token keyword">in</span> it<span class="token punctuation">.</span>repeat<span class="token punctuation">(</span><span class="token builtin">iter</span><span class="token punctuation">(</span>sequence<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">yield</span> <span class="token builtin">tuple</span><span class="token punctuation">(</span>it<span class="token punctuation">.</span>takewhile<span class="token punctuation">(</span><span class="token keyword">lambda</span> p<span class="token punctuation">:</span> p <span class="token operator">&gt;</span> zero<span class="token punctuation">,</span>
+                                     it<span class="token punctuation">.</span>dropwhile<span class="token punctuation">(</span><span class="token keyword">lambda</span> p<span class="token punctuation">:</span> p <span class="token operator">&lt;=</span> zero<span class="token punctuation">,</span> itr<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> it<span class="token punctuation">.</span>takewhile<span class="token punctuation">(</span><span class="token keyword">lambda</span> t<span class="token punctuation">:</span> <span class="token builtin">len</span><span class="token punctuation">(</span>t<span class="token punctuation">)</span><span class="token punctuation">,</span> _consecutives<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+
+<span class="token keyword">def</span> <span class="token function">read_prices</span><span class="token punctuation">(</span>csvfile<span class="token punctuation">,</span> _strptime<span class="token operator">=</span>datetime<span class="token punctuation">.</span>strptime<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>csvfile<span class="token punctuation">)</span> <span class="token keyword">as</span> infile<span class="token punctuation">:</span>
+        reader <span class="token operator">=</span> csv<span class="token punctuation">.</span>DictReader<span class="token punctuation">(</span>infile<span class="token punctuation">)</span>
+        <span class="token keyword">for</span> row <span class="token keyword">in</span> reader<span class="token punctuation">:</span>
+            <span class="token keyword">yield</span> DataPoint<span class="token punctuation">(</span>date<span class="token operator">=</span>_strptime<span class="token punctuation">(</span>row<span class="token punctuation">[</span><span class="token string">'Date'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">'%Y-%m-%d'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>date<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                            value<span class="token operator">=</span><span class="token builtin">float</span><span class="token punctuation">(</span>row<span class="token punctuation">[</span><span class="token string">'Adj Close'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+
+<span class="token comment"># Read prices and calculate daily percent change.</span>
+prices <span class="token operator">=</span> <span class="token builtin">tuple</span><span class="token punctuation">(</span>read_prices<span class="token punctuation">(</span><span class="token string">'SP500.csv'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+gains <span class="token operator">=</span> <span class="token builtin">tuple</span><span class="token punctuation">(</span>DataPoint<span class="token punctuation">(</span>day<span class="token punctuation">.</span>date<span class="token punctuation">,</span> <span class="token number">100</span><span class="token operator">*</span><span class="token punctuation">(</span>day<span class="token punctuation">.</span>value<span class="token operator">/</span>prev_day<span class="token punctuation">.</span>value <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">.</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+              <span class="token keyword">for</span> day<span class="token punctuation">,</span> prev_day <span class="token keyword">in</span> <span class="token builtin">zip</span><span class="token punctuation">(</span>prices<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">,</span> prices<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Find maximum daily gain/loss.</span>
+zdp <span class="token operator">=</span> DataPoint<span class="token punctuation">(</span><span class="token boolean">None</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>  <span class="token comment"># zero DataPoint</span>
+max_gain <span class="token operator">=</span> ft<span class="token punctuation">.</span><span class="token builtin">reduce</span><span class="token punctuation">(</span><span class="token builtin">max</span><span class="token punctuation">,</span> it<span class="token punctuation">.</span>filterfalse<span class="token punctuation">(</span><span class="token keyword">lambda</span> p<span class="token punctuation">:</span> p<span class="token punctuation">.</span>value <span class="token operator">&lt;=</span> zdp<span class="token punctuation">,</span> gains<span class="token punctuation">)</span><span class="token punctuation">)</span>
+max_loss <span class="token operator">=</span> ft<span class="token punctuation">.</span><span class="token builtin">reduce</span><span class="token punctuation">(</span><span class="token builtin">min</span><span class="token punctuation">,</span> it<span class="token punctuation">.</span>filterfalse<span class="token punctuation">(</span><span class="token keyword">lambda</span> p<span class="token punctuation">:</span> p<span class="token punctuation">.</span>value <span class="token operator">&gt;</span> zdp<span class="token punctuation">,</span> gains<span class="token punctuation">)</span><span class="token punctuation">,</span> zdp<span class="token punctuation">)</span>
+
+
+<span class="token comment"># Find longest growth streak.</span>
+growth_streaks <span class="token operator">=</span> consecutive_positives<span class="token punctuation">(</span>gains<span class="token punctuation">,</span> zero<span class="token operator">=</span>DataPoint<span class="token punctuation">(</span><span class="token boolean">None</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+longest_streak <span class="token operator">=</span> ft<span class="token punctuation">.</span><span class="token builtin">reduce</span><span class="token punctuation">(</span><span class="token keyword">lambda</span> x<span class="token punctuation">,</span> y<span class="token punctuation">:</span> x <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span> <span class="token operator">&gt;</span> <span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span> <span class="token keyword">else</span> y<span class="token punctuation">,</span>
+                           growth_streaks<span class="token punctuation">)</span>
+
+<span class="token comment"># Display results.</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'Max gain: {1:.2f}% on {0}'</span><span class="token punctuation">.</span><span class="token builtin">format</span><span class="token punctuation">(</span><span class="token operator">*</span>max_gain<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'Max loss: {1:.2f}% on {0}'</span><span class="token punctuation">.</span><span class="token builtin">format</span><span class="token punctuation">(</span><span class="token operator">*</span>max_loss<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'Longest growth streak: {num_days} days ({first} to {last})'</span><span class="token punctuation">.</span><span class="token builtin">format</span><span class="token punctuation">(</span>
+    num_days<span class="token operator">=</span><span class="token builtin">len</span><span class="token punctuation">(</span>longest_streak<span class="token punctuation">)</span><span class="token punctuation">,</span>
+    first<span class="token operator">=</span>longest_streak<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>date<span class="token punctuation">,</span>
+    last<span class="token operator">=</span>longest_streak<span class="token punctuation">[</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>date
+<span class="token punctuation">)</span><span class="token punctuation">)</span>
+</code></pre>
+<p>最终结果如下：</p>
+<pre><code>Max gain: 11.58% on 2008-10-13
+Max loss: -20.47% on 1987-10-19
+Longest growth streak: 14 days (1971-03-26 to 1971-04-15)
+</code></pre>
+<p>数据源可以点击<a href="https://raw.githubusercontent.com/realpython/materials/master/itertools-in-python3/SP500.csv">这里</a>下载</p>
+<h2 id="总结">总结</h2>
+<p>这次我为大家梳理一个利用itertools进行了简单实战的小栗子，这里我们旨在多深入了解itertools，但是真实的生活中，遇到这种问题，哪有这么麻烦，一个pandas包就搞定了，我以后会和大家分享和pandas有关的知识，这一次接连三期的itertools总结希望大家喜欢。</p>
+<p>itertools深度解析至此全剧终。</p>
+
+    </div>
+  </div>
+</body>
+
+</html>
